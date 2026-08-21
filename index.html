@@ -217,8 +217,6 @@
 <div class="overlay hidden" id="adminPanelOverlay">
   <div class="modal" style="max-width:480px;">
     <h3>Unanswered questions</h3>
-    <label for="adminName" style="margin-top:0;">Your name (will show as who answered)</label>
-    <input type="text" id="adminName" placeholder="e.g. Officer Juan Dela Cruz" style="margin-bottom:12px;">
     <div class="status" id="adminPanelStatus"></div>
     <div id="pendingList"></div>
     <button class="close-btn" id="adminPanelCloseBtn">Close</button>
@@ -443,8 +441,6 @@ async function openAdminPanel() {
   adminPanelOverlay.classList.remove('hidden');
   pendingList.innerHTML = "";
   adminPanelStatus.textContent = "Loading pending questions...";
-  const savedName = sessionStorage.getItem('adminName');
-  if (savedName) document.getElementById('adminName').value = savedName;
   try {
     const res = await fetch(GAS_URL, {
       method: 'POST',
@@ -486,14 +482,17 @@ function renderPendingList(pending) {
       const answerText = document.querySelector(`.answerInput[data-row="${row}"]`).value.trim();
       const imageUrlText = document.querySelector(`.imageInput[data-row="${row}"]`).value.trim();
       const saveStatus = document.querySelector(`.saveStatus[data-row="${row}"]`);
-      const nameField = document.getElementById('adminName');
-      const answeredByName = nameField.value.trim();
-
-      if (!answeredByName) { nameField.style.borderColor = '#e24b4a'; nameField.focus(); return; }
-      nameField.style.borderColor = '';
-      sessionStorage.setItem('adminName', answeredByName);
 
       if (!answerText) { saveStatus.textContent = "Enter an answer first."; saveStatus.style.color = "#a32d2d"; return; }
+
+      // Ask who is answering, with the last-used name pre-filled for convenience.
+      const defaultName = sessionStorage.getItem('adminName') || '';
+      const answeredByName = window.prompt('Submit your name', defaultName);
+      if (answeredByName === null) return; // officer cancelled
+      const trimmedName = answeredByName.trim();
+      if (!trimmedName) { saveStatus.textContent = "Name is required."; saveStatus.style.color = "#a32d2d"; return; }
+      sessionStorage.setItem('adminName', trimmedName);
+
       btn.disabled = true;
       saveStatus.textContent = "Saving...";
       saveStatus.style.color = "";
@@ -501,7 +500,7 @@ function renderPendingList(pending) {
         const res = await fetch(GAS_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ action: 'saveAnswer', password: adminPassword, row: row, answer: answerText, imageUrl: imageUrlText, answeredBy: answeredByName })
+          body: JSON.stringify({ action: 'saveAnswer', password: adminPassword, row: row, answer: answerText, imageUrl: imageUrlText, answeredBy: trimmedName })
         });
         const data = await res.json();
         if (data.status === 'ok') {
