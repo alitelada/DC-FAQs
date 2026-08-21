@@ -217,6 +217,8 @@
 <div class="overlay hidden" id="adminPanelOverlay">
   <div class="modal" style="max-width:480px;">
     <h3>Unanswered questions</h3>
+    <label for="adminName" style="margin-top:0;">Your name (will show as who answered)</label>
+    <input type="text" id="adminName" placeholder="e.g. Officer Juan Dela Cruz" style="margin-bottom:12px;">
     <div class="status" id="adminPanelStatus"></div>
     <div id="pendingList"></div>
     <button class="close-btn" id="adminPanelCloseBtn">Close</button>
@@ -441,6 +443,8 @@ async function openAdminPanel() {
   adminPanelOverlay.classList.remove('hidden');
   pendingList.innerHTML = "";
   adminPanelStatus.textContent = "Loading pending questions...";
+  const savedName = sessionStorage.getItem('adminName');
+  if (savedName) document.getElementById('adminName').value = savedName;
   try {
     const res = await fetch(GAS_URL, {
       method: 'POST',
@@ -482,6 +486,13 @@ function renderPendingList(pending) {
       const answerText = document.querySelector(`.answerInput[data-row="${row}"]`).value.trim();
       const imageUrlText = document.querySelector(`.imageInput[data-row="${row}"]`).value.trim();
       const saveStatus = document.querySelector(`.saveStatus[data-row="${row}"]`);
+      const nameField = document.getElementById('adminName');
+      const answeredByName = nameField.value.trim();
+
+      if (!answeredByName) { nameField.style.borderColor = '#e24b4a'; nameField.focus(); return; }
+      nameField.style.borderColor = '';
+      sessionStorage.setItem('adminName', answeredByName);
+
       if (!answerText) { saveStatus.textContent = "Enter an answer first."; saveStatus.style.color = "#a32d2d"; return; }
       btn.disabled = true;
       saveStatus.textContent = "Saving...";
@@ -490,13 +501,17 @@ function renderPendingList(pending) {
         const res = await fetch(GAS_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ action: 'saveAnswer', password: adminPassword, row: row, answer: answerText, imageUrl: imageUrlText })
+          body: JSON.stringify({ action: 'saveAnswer', password: adminPassword, row: row, answer: answerText, imageUrl: imageUrlText, answeredBy: answeredByName })
         });
         const data = await res.json();
         if (data.status === 'ok') {
           saveStatus.textContent = "Saved.";
           saveStatus.style.color = "#2e7d32";
           setTimeout(() => openAdminPanel(), 700);
+        } else if (data.error === 'already_answered') {
+          saveStatus.textContent = `Already answered by ${data.answeredBy}. Refreshing list...`;
+          saveStatus.style.color = "#a67c00";
+          setTimeout(() => openAdminPanel(), 1200);
         } else {
           saveStatus.textContent = "Could not save. Try again.";
           saveStatus.style.color = "#a32d2d";
