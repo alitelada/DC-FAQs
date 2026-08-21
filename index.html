@@ -181,6 +181,7 @@
     <div class="welcome">Logged in as <b id="studentNumberDisplay"></b> · <button class="link-btn" id="logoutBtn">switch</button></div>
     <button id="openModalBtn">Ask a Question</button>
     <div class="status" id="loadStatus"></div>
+    <div id="myQuestionsBox"></div>
   </div>
 
   <div style="text-align:center; margin-top:24px;">
@@ -193,6 +194,7 @@
 <div class="overlay hidden" id="overlay">
   <div class="modal">
     <h3>What is your question?</h3>
+    <div style="font-size:11px; color:var(--muted); margin-bottom:10px; line-height:1.4;">Please write your question in English, one question at a time.</div>
     <textarea id="questionInput" rows="3" placeholder="Type your question here..."></textarea>
     <button id="askBtn">Search Answer</button>
     <div id="resultBox"></div>
@@ -258,6 +260,7 @@ loginBtn.addEventListener('click', () => {
   loginCard.classList.add('hidden');
   qaCard.classList.remove('hidden');
   loadFAQ();
+  loadMyQuestions();
 });
 
 logoutBtn.addEventListener('click', () => {
@@ -276,6 +279,7 @@ window.addEventListener('load', () => {
     loginCard.classList.add('hidden');
     qaCard.classList.remove('hidden');
     loadFAQ();
+    loadMyQuestions();
   }
 });
 
@@ -302,6 +306,75 @@ async function loadFAQ() {
     loadStatus.textContent = "Could not load FAQ list. You can still ask.";
     faqList = [];
   }
+}
+
+// ---- Load the student's own submitted questions ----
+async function loadMyQuestions() {
+  const container = document.getElementById('myQuestionsBox');
+  try {
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'myQuestions', studentNumber: studentNumber })
+    });
+    const data = await res.json();
+    renderMyQuestions(data.questions || []);
+  } catch (err) {
+    container.innerHTML = "";
+  }
+}
+
+function renderMyQuestions(list) {
+  const container = document.getElementById('myQuestionsBox');
+  if (!list.length) { container.innerHTML = ""; return; }
+
+  container.innerHTML = `
+    <div style="margin-top:20px;">
+      <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:10px;">Your Questions</div>
+      ${list.map(item => {
+        if (!item.answered) {
+          return `
+            <div style="border:1px solid #eed48a; background:#fff6e0; border-radius:10px; padding:12px; margin-bottom:10px; font-size:13px;">
+              <div style="font-weight:600; margin-bottom:6px;">${escapeHtml(item.question)}</div>
+              <div style="color:#a67c00; font-size:12px;">⏳ Forwarded to the concerned officer. Please check back from time to time.</div>
+            </div>`;
+        }
+        return `
+          <div style="border:1px solid #b9dfb9; background:#eaf5ee; border-radius:10px; padding:12px; margin-bottom:10px; font-size:13px;">
+            <div style="font-weight:600; margin-bottom:8px;">${escapeHtml(item.question)}</div>
+            <button class="viewAnswerBtn" data-row="${item.row}" style="background:#2e7d32; padding:9px; font-size:13px;">View Answer</button>
+            <div class="answerReveal" data-row="${item.row}" style="display:none; margin-top:10px;"></div>
+          </div>`;
+      }).join('')}
+    </div>`;
+
+  document.querySelectorAll('.viewAnswerBtn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const row = btn.getAttribute('data-row');
+      const item = list.find(q => String(q.row) === String(row));
+      const reveal = document.querySelector(`.answerReveal[data-row="${row}"]`);
+      reveal.style.display = 'block';
+      reveal.innerHTML = `
+        ${formatAnswer(item.answer)}
+        ${item.imageUrl ? `<a href="${escapeHtml(item.imageUrl)}" target="_blank" rel="noopener" style="display:inline-block; margin-top:8px; color:#1a4fbf; font-weight:600; text-decoration:underline; font-size:12px;">📎 View QR code / image</a>` : ''}
+        <div style="font-size:11px; color:var(--muted); margin-top:8px;">Answered by: ${escapeHtml(item.answeredBy || 'DC Officer')}</div>
+        <button class="confirmViewedBtn" data-row="${row}" style="margin-top:10px; background:#12206b; padding:9px; font-size:13px;">Confirm</button>
+      `;
+      btn.remove();
+      document.querySelector(`.confirmViewedBtn[data-row="${row}"]`).addEventListener('click', async (e) => {
+        e.target.disabled = true;
+        e.target.textContent = "Saving...";
+        try {
+          await fetch(GAS_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'markViewed', row: row })
+          });
+        } catch (err) {}
+        loadMyQuestions();
+      });
+    });
+  });
 }
 
 // ---- Simple text similarity (word overlap / Jaccard) ----
@@ -362,9 +435,10 @@ askBtn.addEventListener('click', async () => {
       resultBox.innerHTML = `
         <div class="result sent">
           <span class="tag">Forwarded to Doctoral Council</span>
-          No existing answer yet — your question has been sent to the concerned officer. Please check back later or wait for an announcement.
+          No existing answer yet — your question has been sent to the concerned officer. Please check back from time to time.
         </div>`;
       questionInput.value = "";
+      loadMyQuestions();
     } catch (err) {
       resultBox.innerHTML = `<div class="result sent"><span class="tag">Error</span>Could not send your question. Please try again or contact the DC directly.</div>`;
     }
