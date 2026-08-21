@@ -184,7 +184,7 @@
   </div>
 
   <div style="text-align:center; margin-top:24px;">
-    <span id="adminTrigger" style="font-size:10px; color:#d7deec; cursor:pointer; user-select:none;">•</span>
+    <span id="adminTrigger" style="font-size:12px; color:#8a94ad; cursor:pointer; user-select:none; padding:8px; text-decoration:underline;">Login as Administrator</span>
   </div>
 
 </div>
@@ -269,10 +269,10 @@ logoutBtn.addEventListener('click', () => {
 });
 
 window.addEventListener('load', () => {
-  const saved = sessionStorage.getItem('studentNumber');
-  if (saved) {
-    studentNumber = saved;
-    studentNumberDisplay.textContent = saved;
+  const savedStudent = sessionStorage.getItem('studentNumber');
+  if (savedStudent) {
+    studentNumber = savedStudent;
+    studentNumberDisplay.textContent = savedStudent;
     loginCard.classList.add('hidden');
     qaCard.classList.remove('hidden');
     loadFAQ();
