@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NTC Doctoral Council — FAQ</title>
+<style>
+  :root {
+    --navy: #12206b;
+    --blue: #1a4fbf;
+    --lightblue: #4fa8e0;
+    --bg: #f3f6fb;
+    --card: #ffffff;
+    --text: #1c2333;
+    --muted: #6b7280;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    padding: 24px 16px;
+  }
+  .wrap { width: 100%; max-width: 480px; }
+  header { text-align: center; margin-bottom: 20px; }
+  header img {
+    width: 130px;
+    height: 130px;
+    object-fit: contain;
+    margin-bottom: 10px;
+  }
+  header h1 {
+    font-size: 1.05rem;
+    letter-spacing: 0.04em;
+    color: var(--navy);
+    margin: 0;
+    font-weight: 800;
+  }
+  header h2 {
+    font-size: 1.4rem;
+    letter-spacing: 0.03em;
+    color: var(--blue);
+    margin: 2px 0 10px;
+    font-weight: 800;
+  }
+  header .faq-heading {
+    display: inline-block;
+    background: var(--navy);
+    color: white;
+    padding: 6px 18px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+  .card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 26px;
+    box-shadow: 0 4px 18px rgba(18,32,107,0.1);
+    border-top: 4px solid var(--blue);
+  }
+  label { display:block; font-size:0.85rem; font-weight:600; margin-bottom:8px; color: var(--text); }
+  input, textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d7deec;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-family: inherit;
+    margin-bottom: 14px;
+    resize: vertical;
+  }
+  button {
+    width: 100%;
+    padding: 13px;
+    border: none;
+    border-radius: 10px;
+    background: var(--navy);
+    color: white;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  button:hover { opacity: 0.9; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .hidden { display: none !important; }
+  .welcome { font-size: 0.9rem; color: var(--muted); margin-bottom: 16px; text-align:center; }
+  .welcome b { color: var(--navy); }
+  .link-btn {
+    background: none;
+    color: var(--blue);
+    text-decoration: underline;
+    font-weight: 500;
+    padding: 0;
+    width: auto;
+    display: inline;
+  }
+  .link-btn:hover { opacity: 0.7; }
+
+  /* Modal popup */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(18,32,107,0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 50;
+  }
+  .modal {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 26px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+  .modal h3 {
+    margin: 0 0 16px;
+    color: var(--navy);
+    font-size: 1.1rem;
+  }
+  .modal .close-btn {
+    background: none;
+    color: var(--muted);
+    text-decoration: underline;
+    font-weight: 500;
+    margin-top: 10px;
+  }
+  .result {
+    margin-top: 16px;
+    padding: 16px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+  .result.found { background: #eaf5ee; border: 1px solid #b9dfb9; }
+  .result.sent { background: #fff6e0; border: 1px solid #eed48a; }
+  .result .tag {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 6px;
+  }
+  .result.found .tag { color: #2e7d32; }
+  .result.sent .tag { color: #a67c00; }
+  button { margin-top: 0; }
+  .answerInput, .imageInput { margin-bottom: 8px; }
+  .status { text-align:center; font-size:0.8rem; color: var(--muted); margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <img src="logo.png" alt="NTC Doctoral Council Logo">
+    <h1>NATIONAL TEACHERS COLLEGE</h1>
+    <h2>DOCTORAL COUNCIL</h2>
+    <div class="faq-heading">FREQUENTLY ASKED QUESTIONS</div>
+  </header>
+
+  <!-- LOGIN CARD -->
+  <div class="card" id="loginCard">
+    <label for="studentNumber">Enter your Student Number</label>
+    <input type="text" id="studentNumber" placeholder="e.g. 2026-00123" autocomplete="off">
+    <button id="loginBtn">Continue</button>
+  </div>
+
+  <!-- AFTER LOGIN -->
+  <div class="card hidden" id="qaCard">
+    <div class="welcome">Logged in as <b id="studentNumberDisplay"></b> · <button class="link-btn" id="logoutBtn">switch</button></div>
+    <button id="openModalBtn">Ask a Question</button>
+    <div class="status" id="loadStatus"></div>
+  </div>
+
+  <div style="text-align:center; margin-top:24px;">
+    <span id="adminTrigger" style="font-size:10px; color:#d7deec; cursor:pointer; user-select:none;">•</span>
+  </div>
+
+</div>
+
+<!-- POPUP MODAL -->
+<div class="overlay hidden" id="overlay">
+  <div class="modal">
+    <h3>What is your question?</h3>
+    <textarea id="questionInput" rows="3" placeholder="Type your question here..."></textarea>
+    <button id="askBtn">Search Answer</button>
+    <div id="resultBox"></div>
+    <div class="status" id="statusMsg"></div>
+    <button class="close-btn" id="closeModalBtn">Close</button>
+  </div>
+</div>
+
+<!-- ADMIN LOGIN MODAL -->
+<div class="overlay hidden" id="adminLoginOverlay">
+  <div class="modal">
+    <h3>Officer login</h3>
+    <label for="adminPassword">Password</label>
+    <input type="password" id="adminPassword" placeholder="Enter password" autocomplete="off">
+    <div class="status" id="adminLoginError" style="color:#a32d2d;"></div>
+    <button id="adminLoginBtn">Log in</button>
+    <button class="close-btn" id="adminLoginCloseBtn">Close</button>
+  </div>
+</div>
+
+<!-- ADMIN PANEL MODAL -->
+<div class="overlay hidden" id="adminPanelOverlay">
+  <div class="modal" style="max-width:480px;">
+    <h3>Unanswered questions</h3>
+    <div class="status" id="adminPanelStatus"></div>
+    <div id="pendingList"></div>
+    <button class="close-btn" id="adminPanelCloseBtn">Close</button>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   CONFIG — REPLACE THIS with your deployed Apps Script URL
+   ========================================================= */
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzlQjnsN4-lCD9vG3luzt3abP6a9KM4_vfmyxgH6Ajjd4RH5drcFGqeN4Wb9y3mSjdx/exec";
+const MATCH_THRESHOLD = 0.42; // 0–1, higher = stricter matching
+
+let faqList = [];
+let studentNumber = "";
+
+const loginCard = document.getElementById('loginCard');
+const qaCard = document.getElementById('qaCard');
+const studentNumberInput = document.getElementById('studentNumber');
+const studentNumberDisplay = document.getElementById('studentNumberDisplay');
+const loginBtn = document.getElementById('loginBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+const openModalBtn = document.getElementById('openModalBtn');
+const closeModalBtn = document.getElementById('closeModalBtn');
+const overlay = document.getElementById('overlay');
+const questionInput = document.getElementById('questionInput');
+const askBtn = document.getElementById('askBtn');
+const resultBox = document.getElementById('resultBox');
+const statusMsg = document.getElementById('statusMsg');
+const loadStatus = document.getElementById('loadStatus');
+
+// ---- Login (student number only, no password) ----
+loginBtn.addEventListener('click', () => {
+  const val = studentNumberInput.value.trim();
+  if (!val) { alert('Please enter your student number.'); return; }
+  studentNumber = val;
+  sessionStorage.setItem('studentNumber', val);
+  studentNumberDisplay.textContent = val;
+  loginCard.classList.add('hidden');
+  qaCard.classList.remove('hidden');
+  loadFAQ();
+});
+
+logoutBtn.addEventListener('click', () => {
+  sessionStorage.removeItem('studentNumber');
+  studentNumber = "";
+  qaCard.classList.add('hidden');
+  loginCard.classList.remove('hidden');
+  studentNumberInput.value = "";
+});
+
+window.addEventListener('load', () => {
+  const saved = sessionStorage.getItem('studentNumber');
+  if (saved) {
+    studentNumber = saved;
+    studentNumberDisplay.textContent = saved;
+    loginCard.classList.add('hidden');
+    qaCard.classList.remove('hidden');
+    loadFAQ();
+  }
+});
+
+// ---- Popup controls ----
+openModalBtn.addEventListener('click', () => {
+  overlay.classList.remove('hidden');
+  questionInput.value = "";
+  resultBox.innerHTML = "";
+  statusMsg.textContent = "";
+  questionInput.focus();
+});
+closeModalBtn.addEventListener('click', () => {
+  overlay.classList.add('hidden');
+});
+
+// ---- Load FAQ list from Google Sheet (via Apps Script) ----
+async function loadFAQ() {
+  loadStatus.textContent = "Loading FAQ list...";
+  try {
+    const res = await fetch(`${GAS_URL}?action=faq`);
+    faqList = await res.json();
+    loadStatus.textContent = `${faqList.length} answered question(s) available.`;
+  } catch (err) {
+    loadStatus.textContent = "Could not load FAQ list. You can still ask.";
+    faqList = [];
+  }
+}
+
+// ---- Simple text similarity (word overlap / Jaccard) ----
+function normalize(str) {
+  return str.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(Boolean);
+}
+function similarity(a, b) {
+  const wa = new Set(normalize(a));
+  const wb = new Set(normalize(b));
+  if (wa.size === 0 || wb.size === 0) return 0;
+  const intersection = [...wa].filter(w => wb.has(w));
+  const union = new Set([...wa, ...wb]);
+  return intersection.length / union.size;
+}
+function findBestMatch(question) {
+  let best = null;
+  let bestScore = 0;
+  for (const item of faqList) {
+    const score = similarity(question, item.question);
+    if (score > bestScore) { bestScore = score; best = item; }
+  }
+  return bestScore >= MATCH_THRESHOLD ? best : null;
+}
+
+// ---- Search Answer button ----
+askBtn.addEventListener('click', async () => {
+  const question = questionInput.value.trim();
+  if (!question) { alert('Please type your question first.'); return; }
+
+  askBtn.disabled = true;
+  resultBox.innerHTML = "";
+  statusMsg.textContent = "Checking existing FAQs...";
+
+  const match = findBestMatch(question);
+
+  if (match) {
+    resultBox.innerHTML = `
+      <div class="result found">
+        <span class="tag">Answer found</span>
+        <div><b>Q:</b> ${escapeHtml(match.question)}</div>
+        <div style="margin-top:8px;"><b>A:</b></div>
+        ${formatAnswer(match.answer)}
+        ${match.imageUrl ? `<a href="${escapeHtml(match.imageUrl)}" target="_blank" rel="noopener" style="display:inline-block; margin-top:10px; color:#1a4fbf; font-weight:600; text-decoration:underline;">📎 View QR code / image</a>` : ''}
+      </div>`;
+    statusMsg.textContent = "";
+    askBtn.disabled = false;
+  } else {
+    try {
+      await fetch(GAS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          action: 'submit',
+          studentNumber: studentNumber,
+          question: question
+        })
+      });
+      resultBox.innerHTML = `
+        <div class="result sent">
+          <span class="tag">Forwarded to Doctoral Council</span>
+          No existing answer yet — your question has been sent to the concerned officer. Please check back later or wait for an announcement.
+        </div>`;
+      questionInput.value = "";
+    } catch (err) {
+      resultBox.innerHTML = `<div class="result sent"><span class="tag">Error</span>Could not send your question. Please try again or contact the DC directly.</div>`;
+    }
+    statusMsg.textContent = "";
+    askBtn.disabled = false;
+  }
+});
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// If the answer has multiple lines (steps), render as a numbered list.
+// If it's a single line, render as plain text.
+function formatAnswer(answer) {
+  const lines = answer.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  if (lines.length <= 1) {
+    return `<div>${escapeHtml(answer)}</div>`;
+  }
+  const items = lines.map(line => `<li style="margin-bottom:6px;">${escapeHtml(line)}</li>`).join('');
+  return `<ol style="margin:6px 0 0 18px; padding:0;">${items}</ol>`;
+}
+
+/* ================= ADMIN PANEL ================= */
+let adminPassword = "";
+
+const adminTrigger = document.getElementById('adminTrigger');
+const adminLoginOverlay = document.getElementById('adminLoginOverlay');
+const adminPassword_input = document.getElementById('adminPassword');
+const adminLoginBtn = document.getElementById('adminLoginBtn');
+const adminLoginError = document.getElementById('adminLoginError');
+const adminLoginCloseBtn = document.getElementById('adminLoginCloseBtn');
+const adminPanelOverlay = document.getElementById('adminPanelOverlay');
+const adminPanelStatus = document.getElementById('adminPanelStatus');
+const pendingList = document.getElementById('pendingList');
+const adminPanelCloseBtn = document.getElementById('adminPanelCloseBtn');
+
+adminTrigger.addEventListener('click', () => {
+  adminPassword_input.value = "";
+  adminLoginError.textContent = "";
+  adminLoginOverlay.classList.remove('hidden');
+});
+adminLoginCloseBtn.addEventListener('click', () => adminLoginOverlay.classList.add('hidden'));
+adminPanelCloseBtn.addEventListener('click', () => adminPanelOverlay.classList.add('hidden'));
+
+adminLoginBtn.addEventListener('click', async () => {
+  const pw = adminPassword_input.value.trim();
+  if (!pw) { adminLoginError.textContent = "Enter the password."; return; }
+  adminLoginBtn.disabled = true;
+  adminLoginError.textContent = "";
+  try {
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'login', password: pw })
+    });
+    const data = await res.json();
+    if (data.success) {
+      adminPassword = pw;
+      adminLoginOverlay.classList.add('hidden');
+      openAdminPanel();
+    } else {
+      adminLoginError.textContent = "Incorrect password.";
+    }
+  } catch (err) {
+    adminLoginError.textContent = "Connection error. Try again.";
+  }
+  adminLoginBtn.disabled = false;
+});
+
+async function openAdminPanel() {
+  adminPanelOverlay.classList.remove('hidden');
+  pendingList.innerHTML = "";
+  adminPanelStatus.textContent = "Loading pending questions...";
+  try {
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'pending', password: adminPassword })
+    });
+    const data = await res.json();
+    if (data.error) {
+      adminPanelStatus.textContent = "Session expired. Please log in again.";
+      return;
+    }
+    renderPendingList(data.pending || []);
+  } catch (err) {
+    adminPanelStatus.textContent = "Could not load questions.";
+  }
+}
+
+function renderPendingList(pending) {
+  if (pending.length === 0) {
+    adminPanelStatus.textContent = "No unanswered questions right now.";
+    pendingList.innerHTML = "";
+    return;
+  }
+  adminPanelStatus.textContent = `${pending.length} question(s) waiting for an answer.`;
+  pendingList.innerHTML = pending.map(p => `
+    <div style="border:1px solid #d7deec; border-radius:10px; padding:12px; margin-top:10px;">
+      <div style="font-size:11px; color:var(--muted); margin-bottom:4px;">Student ${escapeHtml(p.studentNumber || 'unknown')}</div>
+      <div style="font-size:13px; font-weight:600; margin-bottom:8px;">${escapeHtml(p.question)}</div>
+      <textarea rows="3" placeholder="Type the answer (use Enter for separate steps)" data-row="${p.row}" class="answerInput" style="margin-bottom:8px;"></textarea>
+      <input type="text" placeholder="Image / QR code link (optional)" data-row="${p.row}" class="imageInput" style="margin-bottom:8px;">
+      <button class="submitAnswerBtn" data-row="${p.row}">Submit answer</button>
+      <div class="status saveStatus" data-row="${p.row}"></div>
+    </div>
+  `).join('');
+
+  document.querySelectorAll('.submitAnswerBtn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const row = btn.getAttribute('data-row');
+      const answerText = document.querySelector(`.answerInput[data-row="${row}"]`).value.trim();
+      const imageUrlText = document.querySelector(`.imageInput[data-row="${row}"]`).value.trim();
+      const saveStatus = document.querySelector(`.saveStatus[data-row="${row}"]`);
+      if (!answerText) { saveStatus.textContent = "Enter an answer first."; saveStatus.style.color = "#a32d2d"; return; }
+      btn.disabled = true;
+      saveStatus.textContent = "Saving...";
+      saveStatus.style.color = "";
+      try {
+        const res = await fetch(GAS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'saveAnswer', password: adminPassword, row: row, answer: answerText, imageUrl: imageUrlText })
+        });
+        const data = await res.json();
+        if (data.status === 'ok') {
+          saveStatus.textContent = "Saved.";
+          saveStatus.style.color = "#2e7d32";
+          setTimeout(() => openAdminPanel(), 700);
+        } else {
+          saveStatus.textContent = "Could not save. Try again.";
+          saveStatus.style.color = "#a32d2d";
+          btn.disabled = false;
+        }
+      } catch (err) {
+        saveStatus.textContent = "Connection error.";
+        saveStatus.style.color = "#a32d2d";
+        btn.disabled = false;
+      }
+    });
+  });
+}
+</script>
+</body>
+</html>
