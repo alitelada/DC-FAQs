@@ -219,6 +219,7 @@
 <div class="overlay hidden" id="adminPanelOverlay">
   <div class="modal" style="max-width:480px;">
     <h3>Unanswered questions</h3>
+    <button id="refreshPendingBtn" style="background:#4fa8e0; margin-bottom:12px;">🔄 Refresh List</button>
     <div class="status" id="adminPanelStatus"></div>
     <div id="pendingList"></div>
     <button class="close-btn" id="adminPanelCloseBtn">Close</button>
@@ -477,6 +478,8 @@ const adminPanelOverlay = document.getElementById('adminPanelOverlay');
 const adminPanelStatus = document.getElementById('adminPanelStatus');
 const pendingList = document.getElementById('pendingList');
 const adminPanelCloseBtn = document.getElementById('adminPanelCloseBtn');
+const refreshPendingBtn = document.getElementById('refreshPendingBtn');
+refreshPendingBtn.addEventListener('click', () => openAdminPanel());
 
 adminTrigger.addEventListener('click', () => {
   adminPassword_input.value = "";
