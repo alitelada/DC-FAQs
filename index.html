@@ -332,44 +332,44 @@ function renderMyQuestions(list) {
   container.innerHTML = `
     <div style="margin-top:20px;">
       <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:10px;">Your Questions</div>
-      ${list.map(item => {
+      ${list.map((item, idx) => {
         if (!item.answered) {
           return `
-            <div style="border:1px solid #eed48a; background:#fff6e0; border-radius:10px; padding:12px; margin-bottom:10px; font-size:13px;">
+            <div style="border:1px solid #eed48a; background:#fff6e0; border-radius:10px; padding:12px; margin-bottom:10px; font-size:13px; overflow-wrap:break-word;">
               <div style="font-weight:600; margin-bottom:6px;">${escapeHtml(item.question)}</div>
               <div style="color:#a67c00; font-size:12px;">⏳ Forwarded to the concerned officer. Please check back from time to time.</div>
             </div>`;
         }
         return `
-          <div style="border:1px solid #b9dfb9; background:#eaf5ee; border-radius:10px; padding:12px; margin-bottom:10px; font-size:13px;">
+          <div style="border:1px solid #b9dfb9; background:#eaf5ee; border-radius:10px; padding:12px; margin-bottom:10px; font-size:13px; overflow-wrap:break-word;">
             <div style="font-weight:600; margin-bottom:8px;">${escapeHtml(item.question)}</div>
-            <button class="viewAnswerBtn" data-row="${item.row}" style="background:#2e7d32; padding:9px; font-size:13px;">View Answer</button>
-            <div class="answerReveal" data-row="${item.row}" style="display:none; margin-top:10px;"></div>
+            <button class="viewAnswerBtn" data-idx="${idx}" style="background:#2e7d32; padding:9px; font-size:13px;">View Answer</button>
+            <div class="answerReveal" data-idx="${idx}" style="display:none; margin-top:10px; overflow-wrap:break-word;"></div>
           </div>`;
       }).join('')}
     </div>`;
 
   document.querySelectorAll('.viewAnswerBtn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const row = btn.getAttribute('data-row');
-      const item = list.find(q => String(q.row) === String(row));
-      const reveal = document.querySelector(`.answerReveal[data-row="${row}"]`);
+      const idx = btn.getAttribute('data-idx');
+      const item = list[parseInt(idx, 10)];
+      const reveal = document.querySelector(`.answerReveal[data-idx="${idx}"]`);
       reveal.style.display = 'block';
       reveal.innerHTML = `
         ${formatAnswer(item.answer)}
         ${item.imageUrl ? `<a href="${escapeHtml(item.imageUrl)}" target="_blank" rel="noopener" style="display:inline-block; margin-top:8px; color:#1a4fbf; font-weight:600; text-decoration:underline; font-size:12px;">📎 View QR code / image</a>` : ''}
         <div style="font-size:11px; color:var(--muted); margin-top:8px;">Answered by: ${escapeHtml(item.answeredBy || 'DC Officer')}</div>
-        <button class="confirmViewedBtn" data-row="${row}" style="margin-top:10px; background:#12206b; padding:9px; font-size:13px;">Confirm</button>
+        <button class="confirmViewedBtn" data-idx="${idx}" style="margin-top:10px; background:#12206b; padding:9px; font-size:13px;">Confirm</button>
       `;
       btn.remove();
-      document.querySelector(`.confirmViewedBtn[data-row="${row}"]`).addEventListener('click', async (e) => {
+      document.querySelector(`.confirmViewedBtn[data-idx="${idx}"]`).addEventListener('click', async (e) => {
         e.target.disabled = true;
         e.target.textContent = "Saving...";
         try {
           await fetch(GAS_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'markViewed', row: row })
+            body: JSON.stringify({ action: 'markViewed', row: item.row })
           });
         } catch (err) {}
         loadMyQuestions();
@@ -548,10 +548,44 @@ function renderPendingList(pending) {
       <div style="font-size:13px; font-weight:600; margin-bottom:8px;">${escapeHtml(p.question)}</div>
       <textarea rows="3" placeholder="Type the answer (use Enter for separate steps)" data-row="${p.row}" class="answerInput" style="margin-bottom:8px;"></textarea>
       <input type="text" placeholder="Image / QR code link (optional)" data-row="${p.row}" class="imageInput" style="margin-bottom:8px;">
-      <button class="submitAnswerBtn" data-row="${p.row}">Submit answer</button>
+      <div style="display:flex; gap:8px;">
+        <button class="submitAnswerBtn" data-row="${p.row}" style="flex:2;">Submit answer</button>
+        <button class="deleteQuestionBtn" data-row="${p.row}" style="flex:1; background:#a32d2d;">Delete</button>
+      </div>
       <div class="status saveStatus" data-row="${p.row}"></div>
     </div>
   `).join('');
+
+  document.querySelectorAll('.deleteQuestionBtn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const row = btn.getAttribute('data-row');
+      const saveStatus = document.querySelector(`.saveStatus[data-row="${row}"]`);
+      const confirmed = window.confirm('Delete this entry? This cannot be undone.');
+      if (!confirmed) return;
+      btn.disabled = true;
+      saveStatus.textContent = "Deleting...";
+      saveStatus.style.color = "";
+      try {
+        const res = await fetch(GAS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'deleteQuestion', password: adminPassword, row: row })
+        });
+        const data = await res.json();
+        if (data.status === 'ok') {
+          openAdminPanel();
+        } else {
+          saveStatus.textContent = "Could not delete. Try again.";
+          saveStatus.style.color = "#a32d2d";
+          btn.disabled = false;
+        }
+      } catch (err) {
+        saveStatus.textContent = "Connection error.";
+        saveStatus.style.color = "#a32d2d";
+        btn.disabled = false;
+      }
+    });
+  });
 
   document.querySelectorAll('.submitAnswerBtn').forEach(btn => {
     btn.addEventListener('click', async () => {
